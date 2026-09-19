@@ -188,6 +188,21 @@ button:hover {
   border: 1px solid #bee5eb;
 }
 
+.admin-panel {
+  align-self: flex-start;
+}
+
+.admin-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#admin-status {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
 .hidden {
   display: none;
 }

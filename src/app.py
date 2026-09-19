@@ -11,6 +11,14 @@ from fastapi.responses import RedirectResponse
 import os
 from pathlib import Path
 
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+
+
+def is_admin_request(admin_password: str | None) -> bool:
+    """Return whether the request includes the configured admin password."""
+    return bool(admin_password) and admin_password == ADMIN_PASSWORD
+
+
 app = FastAPI(title="Mergington High School API",
               description="API for viewing and signing up for extracurricular activities")
 
@@ -111,11 +119,21 @@ def signup_for_activity(activity_name: str, email: str):
 
 
 @app.delete("/activities/{activity_name}/unregister")
-def unregister_from_activity(activity_name: str, email: str):
-    """Unregister a student from an activity"""
+def unregister_from_activity(
+    activity_name: str,
+    email: str,
+    admin_password: str | None = None,
+):
+    """Unregister a student from an activity. Admin-only access is required."""
     # Validate activity exists
     if activity_name not in activities:
         raise HTTPException(status_code=404, detail="Activity not found")
+
+    if not is_admin_request(admin_password):
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access required to remove a student from an activity.",
+        )
 
     # Get the specific activity
     activity = activities[activity_name]
@@ -124,7 +142,7 @@ def unregister_from_activity(activity_name: str, email: str):
     if email not in activity["participants"]:
         raise HTTPException(
             status_code=400,
-            detail="Student is not signed up for this activity"
+            detail="Student is not signed up for this activity",
         )
 
     # Remove student
